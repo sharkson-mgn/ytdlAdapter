@@ -1,0 +1,18 @@
+{
+    "name": "sharkson-mgn/ytdl-adapter",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "sharkson-mgn\\YtdlAdapter\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "sharkson",
+            "email": "sirmagan@gmail.com"
+        }
+    ],
+    "require": {
+        "gemorroj/archive7z": "^5.4"
+    }
+}
