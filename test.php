@@ -1,7 +1,7 @@
 <?php
   require ("./vendor/autoload.php");
-  $yt = (new Sharkson\YtdlAdapter\Adapter())->downloadIfNotExist();
-  $yt = (new Sharkson\YtdlAdapter\Adapter())->downloadFfmpegIfNotExists();
+  $yt = (new sharksonmgn\YtdlAdapter\Adapter())->downloadIfNotExist();
+  $yt = (new sharksonmgn\YtdlAdapter\Adapter())->downloadFfmpegIfNotExists();
 ?>
 <!DOCTYPE html>
 <html lang="en">

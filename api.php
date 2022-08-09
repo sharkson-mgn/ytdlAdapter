@@ -24,12 +24,12 @@
 
     switch ($post['get']) {
       case 'validateUrls':
-        $urls = (new Sharkson\YtdlAdapter\Adapter())->getValidUrls($post['urls'],null);
+        $urls = (new sharksonmgn\YtdlAdapter\Adapter())->getValidUrls($post['urls'],null);
         returnJson($urls);
         break;
       case 'infoRequest':
         if (isset($post['urls']) && !empty($post['urls'])) {
-          $res = Sharkson\YtdlAdapter\Adapter::infoRequest($post['urls']);
+          $res = sharksonmgn\YtdlAdapter\Adapter::infoRequest($post['urls']);
           returnJson(['response'=>'ok','reason'=>'infoRequest','post'=>$post, 'res'=>$res]);
         }
         else {
@@ -38,7 +38,7 @@
         break;
       case 'infoGet':
         if (isset($post['urls']) && !empty($post['urls'])) {
-          $res = Sharkson\YtdlAdapter\Adapter::infoRequestStatus($post['urls']);
+          $res = sharksonmgn\YtdlAdapter\Adapter::infoRequestStatus($post['urls']);
           returnJson(['response'=>'ok','reason'=>'infoGet','post'=>$post,'res'=>$res]);
         }
         else {
@@ -48,7 +48,7 @@
       case 'downloadRequest':
         if (isset($post['url']) && !empty($post['url'])) {
           try {
-            $res = Sharkson\YtdlAdapter\Adapter::downloadRequest($post['url']);
+            $res = sharksonmgn\YtdlAdapter\Adapter::downloadRequest($post['url']);
           } catch (Exception $e) {
             returnJson(['response'=>'error','reason'=>'downloadRequest','post'=>$post, 'res'=>$e]);
           }
@@ -60,7 +60,7 @@
         break;
       case 'downloadInfo':
         if (isset($post['url']) && !empty($post['url'])) {
-          $res = (new Sharkson\YtdlAdapter\Adapter($post['url']))->downloadProgres();
+          $res = (new sharksonmgn\YtdlAdapter\Adapter($post['url']))->downloadProgres();
           returnJson(['response'=>'ok','reason'=>'downloadInfo','post'=>$post,'res'=>$res]);
         }
         else {
@@ -78,12 +78,12 @@
   if (!empty($_GET)) {
     $get = $_GET;
     if (isset($get['get'])) {
-      $yt = new Sharkson\YtdlAdapter\Adapter('https://www.youtube.com/watch?v=' . $get['get']);
+      $yt = new sharksonmgn\YtdlAdapter\Adapter('https://www.youtube.com/watch?v=' . $get['get']);
       $file_url = $yt->getDownloadPath();
       header('Content-Type: application/octet-stream');
       header("Content-Transfer-Encoding: Binary");
       header("Content-disposition: attachment; filename=\"" . basename($file_url) . "\"");
-      readfile($file_url); 
+      readfile($file_url);
       // var_dump($file_url);
       exit();
     }
@@ -107,7 +107,7 @@
   $urls = include('urls.php');
 
   foreach ($urls as $u) {
-    $yt = new Sharkson\YtdlAdapter\Adapter($u);
+    $yt = new sharksonmgn\YtdlAdapter\Adapter($u);
     var_dump(
       [
         'url'           => $yt->getUrl(),
@@ -124,6 +124,6 @@
     );
   }
 
-  $yt = (new Sharkson\YtdlAdapter\Adapter())->downloadIfNotExist();
+  $yt = (new sharksonmgn\YtdlAdapter\Adapter())->downloadIfNotExist();
 
 ?>

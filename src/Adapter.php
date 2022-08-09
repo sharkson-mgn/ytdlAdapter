@@ -1,6 +1,6 @@
 <?php
 
-  namespace Sharkson\YtdlAdapter;
+  namespace sharksonmgn\YtdlAdapter;
 
   use Archive7z\Archive7z;
   use Symfony\Component\Process\Process;
