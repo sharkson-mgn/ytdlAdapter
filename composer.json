@@ -2,6 +2,8 @@
     "name": "sharkson-mgn/ytdl-adapter",
     "type": "library",
     "license": "MIT",
+    "version": "1.0.0-dev",
+    "homepage": "https://github.com/sharkson-mgn/ytdlAdapter",
     "autoload": {
         "psr-4": {
             "sharkson-mgn\\YtdlAdapter\\": "src/"

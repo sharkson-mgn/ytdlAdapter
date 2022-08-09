@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f29ac5fc741babd8ea87199f6e0f4895",
+    "content-hash": "0ec6391a9149f407120f933432aa079f",
     "packages": [
         {
             "name": "gemorroj/archive7z",
