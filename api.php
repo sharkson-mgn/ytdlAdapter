@@ -22,14 +22,18 @@
     if (!isset($post['get']))
       returnJson(['response'=>'error','reason'=>'post/get not isset','post'=>$post]);
 
+
+    $yt = new sharksonmgn\YtdlAdapter\Adapter();
+    //$yt->setPath('thisDirname',dirname(__FILE__).'/trololo');
+
     switch ($post['get']) {
       case 'validateUrls':
-        $urls = (new sharksonmgn\YtdlAdapter\Adapter())->getValidUrls($post['urls'],null);
+        $urls = $yt->getValidUrls($post['urls'],null);
         returnJson($urls);
         break;
       case 'infoRequest':
         if (isset($post['urls']) && !empty($post['urls'])) {
-          $res = sharksonmgn\YtdlAdapter\Adapter::infoRequest($post['urls']);
+          $res = $yt->infoRequest($post['urls']);
           returnJson(['response'=>'ok','reason'=>'infoRequest','post'=>$post, 'res'=>$res]);
         }
         else {
@@ -38,7 +42,7 @@
         break;
       case 'infoGet':
         if (isset($post['urls']) && !empty($post['urls'])) {
-          $res = sharksonmgn\YtdlAdapter\Adapter::infoRequestStatus($post['urls']);
+          $res = $yt->infoRequestStatus($post['urls']);
           returnJson(['response'=>'ok','reason'=>'infoGet','post'=>$post,'res'=>$res]);
         }
         else {
@@ -48,7 +52,7 @@
       case 'downloadRequest':
         if (isset($post['url']) && !empty($post['url'])) {
           try {
-            $res = sharksonmgn\YtdlAdapter\Adapter::downloadRequest($post['url']);
+            $res = $yt->downloadRequest($post['url']);
           } catch (Exception $e) {
             returnJson(['response'=>'error','reason'=>'downloadRequest','post'=>$post, 'res'=>$e]);
           }
@@ -60,7 +64,8 @@
         break;
       case 'downloadInfo':
         if (isset($post['url']) && !empty($post['url'])) {
-          $res = (new sharksonmgn\YtdlAdapter\Adapter($post['url']))->downloadProgres();
+          $yt->setUrl($post['url']);
+          $res = $yt->downloadProgres();
           returnJson(['response'=>'ok','reason'=>'downloadInfo','post'=>$post,'res'=>$res]);
         }
         else {

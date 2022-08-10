@@ -27,7 +27,8 @@
     private $execRetval;
     private $execOutputDir              = '/exec_output';
 
-    private static $downloadDir         = 'download/';
+    private $downloadDir                = 'download/';
+    private $downloadPath;
 
     private $url                        = null;
 
@@ -51,7 +52,8 @@
                                           'ffmpegDir',
                                           'ffmpegPath',
                                           'ffmpegPathTmp',
-                                          'thisDirname'
+                                          'thisDirname',
+                                          'downloadDir',
                                         ];
 
     public function __construct($url = null) {
@@ -72,6 +74,11 @@
       if ($url === null)
         return;
 
+      $this->setUrl($url);
+
+    }
+
+    public function setUrl($url) {
       $this->url = $url;
 
       $this->validate();
@@ -81,7 +88,6 @@
         $this->urlHash = sha1($this->url);
 
       }
-
     }
 
     private static function joinPaths() {
@@ -99,7 +105,7 @@
 
     public function resetPathes() {
       if ($this->thisDirname === null)
-        $this->thisDirname = dirname(__FILE__);
+        $this->thisDirname = dirname(__FILE__).'/ytdl_storage';
 
       $this->youtubedlPath = self::joinPaths($this->thisDirname,$this->youtubedlDir,$this->youtubedlFilename);
 
@@ -108,7 +114,7 @@
 
       $this->execOutputPath = self::joinPaths($this->thisDirname,$this->execOutputDir);
 
-      $this->downloadPath = self::joinPaths($this->thisDirname,self::$downloadDir);
+      $this->downloadPath = self::joinPaths($this->thisDirname,$this->downloadDir);
 
       $this->outputPath = self::joinPaths($this->thisDirname,'/output/',$this->userHash);
 
@@ -207,9 +213,10 @@
       return false;
     }
 
-    public static function infoRequest($urls) {
+    public function infoRequest($urls) {
 
       $urls = self::getValidUrls($urls);
+      $this->downloadIfNotExist();
 
       $ret = true;
 
@@ -225,8 +232,9 @@
       return $ret;
     }
 
-    public static function infoRequestStatus($urls) {
+    public function infoRequestStatus($urls) {
       $urls = self::getValidUrls($urls);
+      $this->downloadIfNotExist();
 
       $return = [];
 
@@ -243,10 +251,10 @@
       return $return;
     }
 
-    public static function downloadRequest($url) {
+    public function downloadRequest($url) {
 
-      if (!file_exists(self::$downloadDir))
-        mkdir(self::$downloadDir,0766,true);
+      if (!file_exists($this->downloadDir))
+        mkdir($this->downloadDir,0766,true);
 
       $urls = self::getValidUrls($url);
 
@@ -267,10 +275,13 @@
 
     public function getDownloadPath() {
       $path = $this->thisDirname . '/download/';
-      return $this->fixDS($path . implode('',preg_grep('~^sid'.$this->urlHash.'_.*$~', scandir($path))));
+      return $this->fixDS($path . implode('',preg_grep('~^sid'.$this->urlHash.'_.*\.mp3$~', scandir($path))));
     }
 
     public function download() {
+
+      $this->downloadIfNotExist();
+      $this->downloadFfmpegIfNotExists();
 
       $params = [];
       $params[] = '-x';
@@ -288,7 +299,8 @@
       $params[] = '--ffmpeg-location ' . $this->fixDS($this->ffmpegPath);
       // $params[] = '--postprocessor-args "-id3v2_version 3 -progress \'output/'.$this->userHash.'/dezd\'"';
       $params[] = '--postprocessor-args "-id3v2_version 3 -progress \''.$this->getOutputPath('ffmpeg').'\'"';
-      $params[] = "-o \"src/download/sid".$this->urlHash . "_%(title)s.%(ext)s\"";
+      $params[] = "-o \"".$this->downloadPath."/sid".$this->urlHash . "_%(title)s.%(ext)s\"";
+      // $params[] = "-o \"src/download/sid".$this->urlHash . "_%(title)s.%(ext)s\"";
 
       $params[] = '"' . $this->url . '"';
 
@@ -406,7 +418,22 @@
       if (!file_exists(dirname($this->youtubedlPath)))
         mkdir(dirname($this->youtubedlPath),0766,true);
 
-      return $this->youtubedlExists() ? true : file_put_contents($this->youtubedlPath, file_get_contents('https://yt-dl.org/latest/' . $this->youtubedlFilename));
+      $requestDownload = self::joinPaths(dirname($this->youtubedlPath),'youtubedlRequest');
+
+      if (!$this->youtubedlExists() && !file_exists($requestDownload)) {
+        file_put_contents($requestDownload,'');
+        file_put_contents($this->youtubedlPath, file_get_contents('https://yt-dl.org/latest/' . $this->youtubedlFilename));
+        unlink($requestDownload);
+        return true;
+      }
+      elseif (!$this->youtubedlExists() && file_exists($requestDownload)) {
+        return false;
+      }
+      else {
+        return true;
+      }
+
+      //return $this->youtubedlExists() ? true : file_put_contents($this->youtubedlPath, file_get_contents('https://yt-dl.org/latest/' . $this->youtubedlFilename));
     }
 
     public function ffmpegExists() {
@@ -417,7 +444,22 @@
       if (!file_exists(dirname($this->ffmpegPath)))
         mkdir(dirname($this->ffmpegPath),0766,true);
 
-      return $this->ffmpegExists() ? true : $this->downloadFfmpeg();
+      $requestDownload = self::joinPaths(dirname($this->youtubedlPath),'ffmpegRequest');
+
+      if (!$this->ffmpegExists() && !file_exists($requestDownload)) {
+        file_put_contents($requestDownload,'');
+        $this->downloadFfmpeg();
+        unlink($requestDownload);
+        return true;
+      }
+      elseif (!$this->ffmpegExists() && file_exists($requestDownload)) {
+        return false;
+      }
+      else {
+        return true;
+      }
+
+      //return $this->ffmpegExists() ? true : $this->downloadFfmpeg();
     }
 
     public function downloadFfmpeg() {
@@ -565,7 +607,7 @@
 
     public function getOutputPath($action) {
       if (!file_exists($this->outputPath)) {
-        mkdir($this->outputPath, 0777, true);
+        mkdir($this->outputPath, 0766, true);
       }
       return $this->fixDS(self::joinPaths($this->outputPath,$this->urlHash . '_' . $action));
     }
