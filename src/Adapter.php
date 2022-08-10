@@ -555,7 +555,7 @@
     }
 
     public function getOutputPath($action) {
-      return $this->fixDS(self::joinPaths(self::$thisDirname,$this->outputPath,$this->urlHash . '_' . $action));
+      return $this->fixDS(self::joinPaths($this->thisDirname,$this->outputPath,$this->urlHash . '_' . $action));
     }
 
     public function isJson($string) {
