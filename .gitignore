@@ -1,6 +1,4 @@
-/src/bin
-/src/output
-/src/download
+/src/ytdl_storage
 
 composer.phar
 /vendor/
