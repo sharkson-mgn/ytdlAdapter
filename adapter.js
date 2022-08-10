@@ -290,7 +290,7 @@
           $('#' + param.v).find('.barDownload').css('width',res.res.percentage +'%').text('Pobieranie ' + res.res.percentage + '%');
         if (res.res.status == 'converting')
         {
-          $('#' + param.v).find('.barDownload').css('width','0')
+          $('#' + param.v).find('.barDownload').css('width','0').hide();
           $('#' + param.v).find('.barConvert').css('width',res.res.percentage +'%').text('Konwertowanie ' + res.res.percentage.toFixed(1) + '%');
         }
         if (res.res.status == 'end')
@@ -387,7 +387,7 @@
 
 
   $(['.loader',el.urlExample,el.videoExample,el.imgExample]).hide();
-  $([el.debug,el.debugHTML]).hide();
+  // $([el.debug,el.debugHTML]).hide();
 
   "keyup blur".split(" ").forEach(function(e){
     el.textarea.addEventListener(e,() => {

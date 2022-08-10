@@ -129,7 +129,7 @@
             </div>
             <div class="row justify-content-center">
               <div class="col mt-3">
-                <textarea class="form-control" id="inputUrls" rows="3" placeholder="Paste url here..." style="resize: none;"><?php if (isset($_GET['v'])) { echo $_GET['v']; } ?></textarea>
+                <textarea class="form-control" id="inputUrls" rows="3" placeholder="Paste url here..." style="resize: none;"><?php echo implode("\n",array_merge([],['https://www.youtube.com/watch?v=VSNeQF2xJcc&list=PLTKLAGr6FHxPk4BAPONDe4rlsf_nof99Y&index=1'],[(isset($_GET['v']) && !empty($_GET['v'])) ? $_GET['v'] : null])); ?></textarea>
               </div>
             </div>
             <div class="row justify-content-center">
