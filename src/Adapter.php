@@ -45,6 +45,15 @@
 
     private $regexp                     = '//i';
 
+    private $allowed                    = [
+                                          'youtubedlDir',
+                                          'youtubedlPath',
+                                          'ffmpegDir',
+                                          'ffmpegPath',
+                                          'ffmpegPathTmp',
+                                          'thisDirname'
+                                        ];
+
     public function __construct($url = null) {
 
       if (session_status() === PHP_SESSION_NONE) {
@@ -105,16 +114,15 @@
 
     }
 
+    public function passConfig($yt) {
+      foreach($this->allowed as $a) {
+        $yt->setPath($a,$this->$a);
+      }
+      return $yt;
+    }
+
     public function setPath($path,$val) {
-      $allowed = [
-        'youtubedlDir',
-        'youtubedlPath',
-        'ffmpegDir',
-        'ffmpegPath',
-        'ffmpegPathTmp',
-        'thisDirname'
-      ];
-      if (in_array($path,$allowed)) {
+      if (in_array($path,$this->allowed)) {
         $this->$path = $val;
         $this->resetPathes();
       }
@@ -208,6 +216,7 @@
       foreach ($urls as $url) {
 
         $yt = new Adapter($url);
+        $yt = $this->passConfig($yt);
         $r = $yt->getInfo();
         if (!$r) {
           $ret = false;
@@ -224,6 +233,7 @@
       foreach ($urls as $url) {
 
         $yt = new Adapter($url);
+        $yt = $this->passConfig($yt);
         $res = $yt->getInfoResult();
         $md5 = md5($url);
         $return[$md5] = $res === false ? 'inProgress' : $res;
