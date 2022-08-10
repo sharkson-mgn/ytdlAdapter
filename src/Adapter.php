@@ -216,7 +216,9 @@
     public function infoRequest($urls) {
 
       $urls = self::getValidUrls($urls);
-      $this->downloadIfNotExist();
+
+      if (!$this->downloadIfNotExist())
+        return false;
 
       $ret = true;
 
@@ -234,7 +236,9 @@
 
     public function infoRequestStatus($urls) {
       $urls = self::getValidUrls($urls);
-      $this->downloadIfNotExist();
+
+      if (!$this->downloadIfNotExist())
+        return false;
 
       $return = [];
 
@@ -280,8 +284,12 @@
 
     public function download() {
 
-      $this->downloadIfNotExist();
-      $this->downloadFfmpegIfNotExists();
+      if (!$this->downloadIfNotExist())
+        return false;
+
+      if (!$this->downloadFfmpegIfNotExists())
+        return false;
+
 
       $params = [];
       $params[] = '-x';
