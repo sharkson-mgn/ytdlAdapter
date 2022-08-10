@@ -267,6 +267,7 @@
       foreach ($urls as $url) {
 
         $yt = new Adapter($url);
+        $yt = $this->passConfig($yt);
         $md5 = md5($url);
         $yt->getInfo();
         $res = $yt->download();
