@@ -474,12 +474,16 @@
     public function downloadFfmpeg() {
       if ($this->isWindows()) {
         if (!file_exists($this->ffmpegPathTmp)) {
-          mkdir($this->ffmpegPathTmp,0777,true);
+          mkdir($this->ffmpegPathTmp,0766,true);
         }
-        if (!file_exists($this->ffmpegPathTmp . $this->ffmpegArchiveWin)) {
-          file_put_contents($this->ffmpegPathTmp . $this->ffmpegArchiveWin, file_get_contents('https://www.gyan.dev/ffmpeg/builds/'.$this->ffmpegArchiveWin));
+
+        $ffmpegArch = self::joinPaths($this->ffmpegPathTmp,$this->ffmpegArchiveWin);
+
+        if (!file_exists($ffmpegArch)) {
+          ini_set('max_execution_time', ''.(10*600).'');
+          file_put_contents($ffmpegArch, file_get_contents('https://www.gyan.dev/ffmpeg/builds/'.$this->ffmpegArchiveWin));
         }
-        $obj = new Archive7z($this->ffmpegPathTmp . $this->ffmpegArchiveWin);
+        $obj = new Archive7z($ffmpegArch);
 
         if (!$obj->isValid()) {
           throw new \RuntimeException('Incorrect archive');
@@ -493,7 +497,7 @@
             break;
           }
         }
-        unlink($this->ffmpegPathTmp . $this->ffmpegArchiveWin);
+        unlink($ffmpegArch);
       }
       return $this->ffmpegExists();
     }
