@@ -109,7 +109,7 @@
         'thisDirname'
       ];
       if (in_array($path,$allowed)) {
-        $this->$path = $value;
+        $this->$path = $val;
         $this->resetPathes();
       }
     }
