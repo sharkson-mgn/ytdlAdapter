@@ -56,9 +56,9 @@
         $this->ffmpegFilename .= '.exe';
       }
 
-      $this->resetPathes();
-
       $this->createUserHash();
+
+      $this->resetPathes();
 
       if ($url === null)
         return;
@@ -100,6 +100,9 @@
       $this->execOutputPath = self::joinPaths($this->thisDirname,$this->execOutputDir);
 
       $this->downloadPath = self::joinPaths($this->thisDirname,self::$downloadDir);
+
+      $this->outputPath = self::joinPaths($this->thisDirname,'/output/',$this->userHash);
+
     }
 
     public function setPath($path,$val) {
@@ -124,10 +127,6 @@
       }
       else {
         $this->userHash = $_SESSION[$this->sessionKeyHash];
-      }
-      $this->outputPath = $this->thisDirname . '/output/' . $this->userHash . '/';
-      if (!file_exists($this->outputPath)) {
-        mkdir($this->outputPath, 0777, true);
       }
 
       return $this->userHash;
@@ -555,7 +554,10 @@
     }
 
     public function getOutputPath($action) {
-      return $this->fixDS(self::joinPaths($this->thisDirname,$this->outputPath,$this->urlHash . '_' . $action));
+      if (!file_exists($this->outputPath)) {
+        mkdir($this->outputPath, 0777, true);
+      }
+      return $this->fixDS(self::joinPaths($this->outputPath,$this->urlHash . '_' . $action));
     }
 
     public function isJson($string) {
