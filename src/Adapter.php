@@ -27,7 +27,7 @@
     private $execRetval;
     private $execOutputDir              = '/exec_output';
 
-    private $downloadDir                = 'download/';
+    private static $downloadDir         = 'download/';
 
     private $url                        = null;
 
@@ -75,28 +75,31 @@
 
     }
 
+    private static function joinPaths() {
+      $args = func_get_args();
+      $paths = array();
+      foreach ($args as $arg) {
+          $paths = array_merge($paths, (array)$arg);
+      }
+
+      // $paths = array_map(create_function('$p', 'return trim($p, "/");'), $paths);
+      $paths = array_map(function($p){ return trim($p, "/"); },$paths);
+      $paths = array_filter($paths);
+      return self::fixDS(join('/', $paths));
+    }
+
     public function resetPathes() {
       if ($this->thisDirname === null)
         $this->thisDirname = dirname(__FILE__);
 
-      $this->youtubedlDir = $this->thisDirname . '/' . $this->youtubedlDir . '/';
-      $this->youtubedlPath = $this->youtubedlDir . $this->youtubedlFilename;
+      $this->youtubedlPath = self::joinPaths($this->thisDirname,$this->youtubedlDir,$this->youtubedlFilename);
 
-      $this->ffmpegDir = $this->thisDirname . '/' . $this->ffmpegDir . '/';
-      $this->ffmpegPath = $this->ffmpegDir . $this->ffmpegFilename;
-      $this->ffmpegPathTmp = $this->thisDirname . '/';
+      $this->ffmpegPath = self::joinPaths($this->thisDirname,$this->ffmpegDir,$this->ffmpegFilename);
+      $this->ffmpegPathTmp = $this->thisDirname;
 
-      $this->execOutputDir = $this->thisDirname . '/' . $this->execOutputDir;
+      $this->execOutputPath = self::joinPaths($this->thisDirname,$this->execOutputDir);
 
-      $this->downloadDir = $this->thisDirname . '/' . $this->downloadDir;
-
-      if (!file_exists($this->downloadDir))
-        mkdir($this->downloadDir,0766,true);
-
-      if (!file_exists($this->youtubedlDir))
-        mkdir($this->youtubedlDir,0766,true);
-      if (!file_exists($this->ffmpegDir))
-        mkdir($this->ffmpegDir,0766,true);
+      $this->downloadPath = self::joinPaths($this->thisDirname,self::$downloadDir);
     }
 
     public function setPath($path,$val) {
@@ -232,6 +235,10 @@
     }
 
     public static function downloadRequest($url) {
+
+      if (!file_exists(self::$downloadDir))
+        mkdir(self::$downloadDir,0766,true);
+
       $urls = self::getValidUrls($url);
 
       $return = [];
@@ -269,7 +276,7 @@
       $params[] = '--no-warnings';
       $params[] = '--restrict-filenames';
       $params[] = '--cache-dir '.$this->fixDS($this->thisDirname . '/cache');
-      $params[] = '--ffmpeg-location '.$this->fixDS($this->ffmpegPath);
+      $params[] = '--ffmpeg-location ' . $this->fixDS($this->ffmpegPath);
       // $params[] = '--postprocessor-args "-id3v2_version 3 -progress \'output/'.$this->userHash.'/dezd\'"';
       $params[] = '--postprocessor-args "-id3v2_version 3 -progress \''.$this->getOutputPath('ffmpeg').'\'"';
       $params[] = "-o \"src/download/sid".$this->urlHash . "_%(title)s.%(ext)s\"";
@@ -313,11 +320,6 @@
 					//$base = $filename;
 					$base = md5($filename);
 					$md5key = realpath('./download/') . '/' . md5($filename).'.key';
-					if (!file_exists($md5key))
-					{
-						//file_put_contents($md5key,$filename);
-					}
-					//$filename = $ytdl->detect_ssid($filename);
 				}
 
 				preg_match_all('/out_time_ms=(\d+)|progress=([a-z]+)/',$ffmpeg, $matches, PREG_SET_ORDER);
@@ -392,6 +394,9 @@
     }
 
     public function downloadIfNotExist() {
+      if (!file_exists(dirname($this->youtubedlPath)))
+        mkdir(dirname($this->youtubedlPath),0766,true);
+
       return $this->youtubedlExists() ? true : file_put_contents($this->youtubedlPath, file_get_contents('https://yt-dl.org/latest/' . $this->youtubedlFilename));
     }
 
@@ -400,6 +405,9 @@
     }
 
     public function downloadFfmpegIfNotExists() {
+      if (!file_exists(dirname($this->ffmpegPath)))
+        mkdir(dirname($this->ffmpegPath),0766,true);
+
       return $this->ffmpegExists() ? true : $this->downloadFfmpeg();
     }
 
@@ -420,8 +428,8 @@
         foreach($obj->getEntries() as $entry) {
           if ($this->endsWith($entry->getPath(),$this->ffmpegFilename)) {
             $entry->extractTo($this->thisDirname);
-            rename($this->thisDirname . '/' . $entry->getPath(), $this->ffmpegPath);
-            $this->rrmdir($this->thisDirname . '/' . explode(DS,$entry->getPath())[0]);
+            rename(self::joinPaths($this->thisDirname,$entry->getPath()), $this->ffmpegPath);
+            $this->rrmdir(self::joinPaths($this->thisDirname,explode(DS,$entry->getPath())[0]));
             break;
           }
         }
@@ -542,7 +550,7 @@
       return $this->lastParams;
     }
 
-    public function fixDS($path) {
+    private static function fixDS($path) {
       return preg_replace('/(\/|\\\)/','/',$path);
     }
 
