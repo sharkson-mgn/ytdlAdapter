@@ -1,3 +1,7 @@
+/src/bin
+/src/output
+/src/download
+
 composer.phar
 /vendor/
 
