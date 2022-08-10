@@ -279,8 +279,8 @@
     }
 
     public function getDownloadPath() {
-      $path = $this->thisDirname . '/download/';
-      return $this->fixDS($path . implode('',preg_grep('~^sid'.$this->urlHash.'_.*\.mp3$~', scandir($path))));
+      $path = self::joinPaths($this->thisDirname,'/download/');
+      return $this->fixDS(self::joinPaths($path,implode('',preg_grep('~^sid'.$this->urlHash.'_.*\.mp3$~', scandir($path)))));
     }
 
     public function download() {
