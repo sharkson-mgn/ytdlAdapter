@@ -518,7 +518,7 @@
 
         $toExctract = $this->joinPaths($this->thisDirname,'ffmpegtmp');
         if (!file_exists($toExctract))
-          mkdir($toExctract,766,true);
+          mkdir($toExctract,0766,true);
         shell_exec('cd ' . __DIR__ . ' && tar -xf "'.$ffmpegArch.'" -C "'.$toExctract.'"');
         $files = glob($toExctract . '/*');
         foreach ($files as $file) {
