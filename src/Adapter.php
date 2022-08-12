@@ -22,6 +22,7 @@
     private $ffmpegPath                 = null;
     private $ffmpegPathTmp              = null;
     private $ffmpegArchiveWin           = 'ffmpeg-git-essentials.7z';
+    private $ffmpegArchiveUnix          = 'ffmpeg-release-{ARCH}-static.tar.xz';
 
     private $execOutput;
     private $execRetval;
@@ -90,7 +91,7 @@
       }
     }
 
-    private static function joinPaths() {
+    private function joinPaths() {
       $args = func_get_args();
       $paths = array();
       foreach ($args as $arg) {
@@ -100,23 +101,23 @@
       // $paths = array_map(create_function('$p', 'return trim($p, "/");'), $paths);
       $paths = array_map(function($p){ return trim($p, "/"); },$paths);
       $paths = array_filter($paths);
-      return self::fixDS(join('/', $paths));
+      return ($this->isLinux() ? '/' : '') . self::fixDS(join('/', $paths));
     }
 
     public function resetPathes() {
       if ($this->thisDirname === null)
         $this->thisDirname = dirname(__FILE__).'/ytdl_storage';
 
-      $this->youtubedlPath = self::joinPaths($this->thisDirname,$this->youtubedlDir,$this->youtubedlFilename);
+      $this->youtubedlPath = $this->joinPaths($this->thisDirname,$this->youtubedlDir,$this->youtubedlFilename);
 
-      $this->ffmpegPath = self::joinPaths($this->thisDirname,$this->ffmpegDir,$this->ffmpegFilename);
+      $this->ffmpegPath = $this->joinPaths($this->thisDirname,$this->ffmpegDir,$this->ffmpegFilename);
       $this->ffmpegPathTmp = $this->thisDirname;
 
-      $this->execOutputPath = self::joinPaths($this->thisDirname,$this->execOutputDir);
+      $this->execOutputPath = $this->joinPaths($this->thisDirname,$this->execOutputDir);
 
-      $this->downloadPath = self::joinPaths($this->thisDirname,$this->downloadDir);
+      $this->downloadPath = $this->joinPaths($this->thisDirname,$this->downloadDir);
 
-      $this->outputPath = self::joinPaths($this->thisDirname,'/output/',$this->userHash);
+      $this->outputPath = $this->joinPaths($this->thisDirname,'/output/',$this->userHash);
 
     }
 
@@ -279,8 +280,8 @@
     }
 
     public function getDownloadPath() {
-      $path = self::joinPaths($this->thisDirname,'/download/');
-      return $this->fixDS(self::joinPaths($path,implode('',preg_grep('~^sid'.$this->urlHash.'_.*\.mp3$~', scandir($path)))));
+      $path = $this->joinPaths($this->thisDirname,'/download/');
+      return $this->fixDS($this->joinPaths($path,implode('',preg_grep('~^sid'.$this->urlHash.'_.*\.mp3$~', scandir($path)))));
     }
 
     public function download() {
@@ -424,14 +425,16 @@
     }
 
     public function downloadIfNotExist() {
+
       if (!file_exists(dirname($this->youtubedlPath)))
         mkdir(dirname($this->youtubedlPath),0766,true);
 
-      $requestDownload = self::joinPaths(dirname($this->youtubedlPath),'youtubedlRequest');
+      $requestDownload = $this->joinPaths(dirname($this->youtubedlPath),'youtubedlRequest');
 
       if (!$this->youtubedlExists() && !file_exists($requestDownload)) {
         file_put_contents($requestDownload,'');
         file_put_contents($this->youtubedlPath, file_get_contents('https://yt-dl.org/latest/' . $this->youtubedlFilename));
+        chmod($this->youtubedlPath, 0744);
         unlink($requestDownload);
         return true;
       }
@@ -453,7 +456,7 @@
       if (!file_exists(dirname($this->ffmpegPath)))
         mkdir(dirname($this->ffmpegPath),0766,true);
 
-      $requestDownload = self::joinPaths(dirname($this->youtubedlPath),'ffmpegRequest');
+      $requestDownload = $this->joinPaths(dirname($this->youtubedlPath),'ffmpegRequest');
 
       if (!$this->ffmpegExists() && !file_exists($requestDownload)) {
         file_put_contents($requestDownload,'');
@@ -472,12 +475,12 @@
     }
 
     public function downloadFfmpeg() {
+      if (!file_exists($this->ffmpegPathTmp)) {
+        mkdir($this->ffmpegPathTmp,0766,true);
+      }
       if ($this->isWindows()) {
-        if (!file_exists($this->ffmpegPathTmp)) {
-          mkdir($this->ffmpegPathTmp,0766,true);
-        }
 
-        $ffmpegArch = self::joinPaths($this->ffmpegPathTmp,$this->ffmpegArchiveWin);
+        $ffmpegArch = $this->joinPaths($this->ffmpegPathTmp,$this->ffmpegArchiveWin);
 
         if (!file_exists($ffmpegArch)) {
           ini_set('max_execution_time', ''.(10*600).'');
@@ -492,13 +495,45 @@
         foreach($obj->getEntries() as $entry) {
           if ($this->endsWith($entry->getPath(),$this->ffmpegFilename)) {
             $entry->extractTo($this->thisDirname);
-            rename(self::joinPaths($this->thisDirname,$entry->getPath()), $this->ffmpegPath);
-            $this->rrmdir(self::joinPaths($this->thisDirname,explode(DS,$entry->getPath())[0]));
+            rename($this->joinPaths($this->thisDirname,$entry->getPath()), $this->ffmpegPath);
+            $this->rrmdir($this->joinPaths($this->thisDirname,explode(DS,$entry->getPath())[0]));
             break;
           }
         }
         unlink($ffmpegArch);
       }
+      else {
+        $arch = (PHP_INT_MAX == 2147483647)?'i686':'64';
+        if ($arch === '64') {
+          $arch = (false!==stripos(php_uname("m"), "aarch64") || false!== stripos(php_uname("m"),"arm64")) ? 'arm64' : 'amd64';
+        }
+
+        $this->ffmpegArchiveUnix = str_replace('{ARCH}',$arch,$this->ffmpegArchiveUnix);
+
+        $ffmpegArch = $this->joinPaths($this->ffmpegPathTmp,$this->ffmpegArchiveUnix);
+        if (!file_exists($ffmpegArch)) {
+          ini_set('max_execution_time', ''.(10*600).'');
+          file_put_contents($ffmpegArch, file_get_contents('https://johnvansickle.com/ffmpeg/releases/'.$this->ffmpegArchiveUnix));
+        }
+
+        $toExctract = $this->joinPaths($this->thisDirname,'ffmpegtmp');
+        if (!file_exists($toExctract))
+          mkdir($toExctract,766,true);
+        shell_exec('cd ' . __DIR__ . ' && tar -xf "'.$ffmpegArch.'" -C "'.$toExctract.'"');
+        $files = glob($toExctract . '/*');
+        foreach ($files as $file) {
+          $ffmpeg = $this->joinPaths($file,'ffmpeg');
+          if (file_exists($ffmpeg)) {
+            rename($ffmpeg, $this->ffmpegPath);
+            break;
+          }
+        }
+
+        $this->rrmdir($toExctract);
+        unlink($ffmpegArch);
+
+      }
+      chmod($this->ffmpegPath, 0744);
       return $this->ffmpegExists();
     }
 
@@ -526,7 +561,19 @@
     }
 
     public function getInfo() {
-      return $this->isValid() && !$this->getInfoStatus() ? $this->exec('info',['-J','"' . $this->url . '"']) : false;
+      $output = $this->getOutputPath('info');
+      if (file_exists($output)) {
+        false;
+      }
+      return $this->isValid() && !$this->getInfoStatus()
+                      ? $this->exec('info',[
+                          //'--no-cache-dir',
+                          '--cache-dir '.$this->fixDS($this->thisDirname . '/cache'),
+                          '-J',
+                          '"' . $this->url . '"',
+                        ])
+                      : false;
+      // return $this->isValid() && !$this->getInfoStatus() ? $this->exec('info',['--cache-dir '.$this->fixDS($this->thisDirname . '/cache','-J','"' . $this->url . '"']) : false;
     }
 
 
@@ -622,7 +669,7 @@
       if (!file_exists($this->outputPath)) {
         mkdir($this->outputPath, 0766, true);
       }
-      return $this->fixDS(self::joinPaths($this->outputPath,$this->urlHash . '_' . $action));
+      return $this->fixDS($this->joinPaths($this->outputPath,$this->urlHash . '_' . $action));
     }
 
     public function isJson($string) {
