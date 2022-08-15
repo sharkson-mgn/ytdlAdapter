@@ -306,7 +306,7 @@
       $params[] = '--no-warnings';
       $params[] = '--restrict-filenames';
       $params[] = '--cache-dir '.$this->fixDS($this->thisDirname . '/cache');
-      $params[] = '--ffmpeg-location ' . $this->fixDS($this->ffmpegPath);
+      $params[] = '--ffmpeg-location "' . $this->fixDS($this->ffmpegPath) . '"';
       // $params[] = '--postprocessor-args "-id3v2_version 3 -progress \'output/'.$this->userHash.'/dezd\'"';
       $params[] = '--postprocessor-args "-id3v2_version 3 -progress \''.$this->getOutputPath('ffmpeg').'\'"';
       $params[] = "-o \"".$this->downloadPath."/sid".$this->urlHash . "_%(title)s.%(ext)s\"";
