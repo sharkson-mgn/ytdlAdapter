@@ -79,6 +79,11 @@
 
     }
 
+    public function setUserHash($hash) {
+      $_SESSION[$this->sessionKeyHash] = $hash;
+      return $this->createUserHash();
+    }
+
     public function setUrl($url) {
       $this->url = $url;
 
