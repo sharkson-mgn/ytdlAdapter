@@ -125,6 +125,10 @@
       $this->outputPath = $this->joinPaths($this->thisDirname,'/output/',$this->userHash);
 
     }
+	  
+    public function getOutputPath() {
+      return $this->outputPath;
+    }
 
     public function passConfig($yt) {
       foreach($this->allowed as $a) {
