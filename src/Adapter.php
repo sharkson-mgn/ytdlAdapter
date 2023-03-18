@@ -576,6 +576,7 @@
       return $this->isValid() && !$this->getInfoStatus()
                       ? $this->exec('info',[
                           //'--no-cache-dir',
+                          '--no-warnings',
                           '--cache-dir '.$this->fixDS($this->thisDirname . '/cache'),
                           '-J',
                           '"' . $this->url . '"',
