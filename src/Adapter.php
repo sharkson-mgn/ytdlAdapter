@@ -14,8 +14,9 @@
     private $os                         = null;
 
     private $youtubedlDir               = 'bin';
-    private $youtubedlFilename          = 'youtube-dl';
+    private $youtubedlFilename          = 'yt-dlp';
     private $youtubedlPath              = null;
+    private $youtubedlRelease           = '2023.03.04';
 
     private $ffmpegDir                  = 'bin';
     private $ffmpegFilename             = 'ffmpeg';
@@ -66,6 +67,8 @@
       if ($this->isWindows()) {
         $this->youtubedlFilename .= '.exe';
         $this->ffmpegFilename .= '.exe';
+      } else {
+        $this->youtubedlFilename .= '_linux';
       }
 
       $this->createUserHash();
@@ -438,7 +441,7 @@
 
       if (!$this->youtubedlExists() && !file_exists($requestDownload)) {
         file_put_contents($requestDownload,'');
-        file_put_contents($this->youtubedlPath, file_get_contents('https://yt-dl.org/latest/' . $this->youtubedlFilename));
+        file_put_contents($this->youtubedlPath, file_get_contents('https://github.com/yt-dlp/yt-dlp/releases/download/'.$this->youtubedlRelease.'/' . $this->youtubedlFilename));
         chmod($this->youtubedlPath, 0744);
         unlink($requestDownload);
         return true;
