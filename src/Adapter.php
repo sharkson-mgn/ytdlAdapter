@@ -317,7 +317,7 @@
       $params[] = '--ffmpeg-location "' . $this->fixDS($this->ffmpegPath) . '"';
       // $params[] = '--postprocessor-args "-id3v2_version 3 -progress \'output/'.$this->userHash.'/dezd\'"';
       $params[] = '--postprocessor-args "-id3v2_version 3 -progress \''.$this->getOutputPath('ffmpeg').'\'"';
-      $params[] = "-o \"".$this->downloadPath."/sid".$this->urlHash . "_%(title)s.%(ext)s\"";
+      $params[] = "-o \"".$this->downloadPath."/sid".$this->urlHash . "_%(fulltitle)s.%(ext)s\"";
       // $params[] = "-o \"src/download/sid".$this->urlHash . "_%(title)s.%(ext)s\"";
 
       $params[] = '"' . $this->url . '"';
@@ -378,7 +378,7 @@
 				$info = file_get_contents($this->getOutputPath('info'));
 				//$info = preg_replace('/(WARNING.*--restrict-filenames.*\n)/i','',$info);
 
-				if (!$matches /*&& !empty($info)*/ && $status == 'converting')
+				if (!$matches /*&& !empty($info)*/ && isset($status) && $status == 'converting')
 				{
 					$info = json_decode($info,true);
 					$duration = $info['duration'];
@@ -396,7 +396,7 @@
 					$percentage = ($nowdur * 100 / $duration);
 				}
 
-				if ($status == 'end' && $percentage > 90)
+				if (isset($status) && $status == 'end' && $percentage > 90)
 					$percentage = 100;
 
 			}
