@@ -349,7 +349,7 @@
 
 			if (!empty($ffmpeg))
 			{
-				preg_match('/\[ffmpeg\](?:.+)?\s+Destination:\s+(.*)/',$progress,$matches);
+				preg_match('/\[ExtractAudio\](?:.+)?\s+Destination:\s+(.*)/',$progress,$matches);
 				if ($matches)
 				{
 					$outputfile = $matches[1];
@@ -362,6 +362,7 @@
 				}
 
 				preg_match_all('/out_time_ms=(\d+)|progress=([a-z]+)/',$ffmpeg, $matches, PREG_SET_ORDER);
+        
 				if ($matches && isset($filename))
 				{
 					$matches = array_reverse($matches);
@@ -370,7 +371,9 @@
 					else
 						$status = 'converting';
 
-					$nowdur = $matches[1][1] * 0.000001;
+          if (isset($matches[1][1])) {
+					  $nowdur = round($matches[1][1] * 0.000001);
+          }
 				}
 
 				preg_match('/\[ytdl\] duration: (.+)/',$progress,$matches);
@@ -378,7 +381,7 @@
 				$info = file_get_contents($this->getOutputPath('info'));
 				//$info = preg_replace('/(WARNING.*--restrict-filenames.*\n)/i','',$info);
 
-				if (!$matches /*&& !empty($info)*/ && isset($status) && $status == 'converting')
+				if (!$matches /*&& !empty($info)*/)
 				{
 					$info = json_decode($info,true);
 					$duration = $info['duration'];
@@ -391,13 +394,20 @@
 				if (!isset($duration) && $matches)
 					$duration = $matches[1] * 1.0;
 
-				if (isset($duration) && $status !== 'downloading')
+				if (isset($duration) && isset($nowdur) && $status !== 'downloading')
 				{
 					$percentage = ($nowdur * 100 / $duration);
+          /*if ($nowdur < $duration) {
+            $status = 'converting';
+          }*/
 				}
 
 				if (isset($status) && $status == 'end' && $percentage > 90)
 					$percentage = 100;
+
+        /*if ($status !== 'downloading' && $percentage == 100) {
+          $status = 'end';
+        }*/
 
 			}
 
@@ -408,7 +418,8 @@
 				'nowdur'	=>	isset($nowdur) ? $nowdur : 0,
 				'dcounter'	=>	isset($_download) ? $_download : 0,
 				'pkey'		=>	isset($base) ? $base : '',
-				'filename'	=>	isset($filename) ? $filename : ''
+				'filename'	=>	isset($filename) ? $filename : '',
+        //'debug' => isset($debug) ? json_encode($debug) : ''
 				//'pkey'		=>	base64_encode($pkey)
 			);
 
